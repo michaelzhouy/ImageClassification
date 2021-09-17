@@ -3,7 +3,6 @@ import time
 import matplotlib.pyplot as plt
 import torch
 import torchvision
-from torch.autograd import Variable
 from torchvision import datasets, models, transforms
 import warnings
 warnings.filterwarnings('ignore')
@@ -127,7 +126,7 @@ running_correct = 0
 
 for batch, data in enumerate(dataloader["test_set"], 1):
     X, y = data
-    X, y = Variable(X.cuda()), Variable(y.cuda())
+    X, y = X.cuda(), y.cuda()
     y_pred = model(X)
 
     _, pred = torch.max(y_pred.data, 1)
