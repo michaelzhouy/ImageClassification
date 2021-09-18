@@ -11,7 +11,8 @@ from util import accuracy, show_image
 import warnings
 warnings.filterwarnings('ignore')
 warnings.simplefilter(action='ignore', category=FutureWarning)
-os.environ['CUDA_VISIBLE_DEVICES'] = '4'
+os.environ['CUDA_VISIBLE_DEVICES'] = '4,5,6,7'
+
 
 path = '../data'
 train_df = read_train(path)
@@ -22,14 +23,14 @@ show_image(train_df.sample(5)['path'])
 train_loader, val_loader = data_loader(train_df)
 test_loader = test_loader(test_df)
 
+devices = try_all_gpus()
 model = timm.create_model(
     'efficientnet_b0',
     num_classes=137,
     pretrained=True,
     in_chans=3
 )
-
-model = model.cuda()
+model = nn.DataParallel(model, device_ids=devices).to(devices[0])
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=len(train_loader) / 10, gamma=0.95)
@@ -40,12 +41,12 @@ for epoch in range(10):
     train_losss, train_acc1s, train_acc5s = [], [], []
     for i, data in enumerate(train_loader):
         scheduler.step()
-        model = model.train()
+        model.train()
         train_img, train_label = data
         optimizer.zero_grad()
 
-        train_img = train_img.cuda()
-        train_label = train_label.view(-1).cuda()
+        train_img = train_img.to(devices[0])
+        train_label = train_label.view(-1).to(devices[0])
 
         output = model(train_img)
         train_loss = loss_fn(output, train_label)
@@ -66,8 +67,8 @@ for epoch in range(10):
                 for data in val_loader:
                     val_images, val_labels = data
 
-                    val_images = val_images.cuda()
-                    val_labels = val_labels.view(-1).cuda()
+                    val_images = val_images.to(devices[0])
+                    val_labels = val_labels.view(-1).to(devices[0])
 
                     output = model(val_images)
                     val_loss = loss_fn(output, val_labels)
@@ -91,8 +92,8 @@ for tti in range(5):
     pred = []
     with torch.no_grad():
         for t, (x, y) in enumerate(test_loader):
-            x_var = x.cuda()
-            y_var = y.cuda()
+            x_var = x.to(devices[0])
+            y_var = y.to(devices[0])
             scores = model(x_var)
             pred.append(scores.data.cpu().numpy())
     pred = np.concatenate(pred, 0)
