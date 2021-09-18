@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2021/9/18 8:44 上午
 # @Author  : Michael Zhouy
+import os
 import numpy as np
 import pandas as pd
 import time
@@ -17,6 +18,7 @@ from torch.utils.data.dataset import Dataset
 import warnings
 warnings.filterwarnings('ignore')
 warnings.simplefilter(action='ignore', category=FutureWarning)
+os.environ['CUDA_VISIBLE_DEVICES'] = '4'
 
 
 def accuracy(output, target, topk=(1,)):
