@@ -18,6 +18,7 @@ from models.inception_v4 import inceptionv4
 from models.xception import pdr_xception
 from models.Ney import Net
 from models.fpn import FPN101
+from util.train import train, validate
 
 
 def main():
