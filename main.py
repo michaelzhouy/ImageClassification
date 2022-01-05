@@ -1,9 +1,11 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import train_test_split
 import os
 import shutil
 import argparse
 from dataset.load_data import get_image_df, my_collate_fn
+import timm
 import torch
 import torch.optim as optim
 from torch.optim import lr_scheduler
@@ -11,13 +13,6 @@ from torch.nn import CrossEntropyLoss
 from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader
 from dataset.load_data import selfDataSet
-from torchvision.models import resnet50, resnet101, vgg16
-from models.multiscale_resnet import multiscale_resnet
-from models.inception_resnet_v2 import pdr_inceptionresnetv2
-from models.inception_v4 import inceptionv4
-from models.xception import pdr_xception
-from models.Ney import Net
-from models.fpn import FPN101
 from util.train import train, validate
 
 
@@ -102,28 +97,8 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = opt.cuda_device
 
     # 网络模型的选择
-    if opt.net == "multiscale":
-        model = multiscale_resnet(6)
-    elif opt.net == 'fpn':
-        model = FPN101()
-    elif opt.net == "resnet50":
-        model = resnet50(pretrained=True)
-        model.avgpool = torch.nn.AdaptiveAvgPool2d(output_size=1)
-        model.fc = torch.nn.Linear(model.fc.in_features, 20)
-    elif opt.net == "resnet101":
-        model = resnet101(pretrained=True)
-        model.avgpool = torch.nn.AdaptiveAvgPool2d(output_size=1)
-        model.fc = torch.nn.Linear(model.fc.in_features, 6)
-    elif opt.net == "xception":
-        model = pdr_xception(6)
-    elif opt.net == "inception_v4":
-        model = inceptionv4(6)
-    elif opt.net == "inception_resnet_v2":
-        model = pdr_inceptionresnetv2(6)
-    elif opt.net == "Net":
-        model = Net(4)
-    elif opt.net == "vgg16":
-        model = vgg16(4)
+    if opt.net == "swin_base_patch4_window7_22":
+        model = timm.create_model('swin_base_patch4_window7_224', pretrained=True, num_classes=num_classes)
 
     # 暂停选项
     if opt.resume:
